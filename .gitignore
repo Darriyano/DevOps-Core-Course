@@ -1,1 +1,15 @@
-test
+# Terraform
+terraform/sa-key.json
+*.tfstate
+.terraform/
+terraform.tfvars
+
+# Pulumi
+pulumi/venv/
+Pulumi.*.yaml
+
+# Keys / creds
+*.pem
+*.key
+*.json
+.env
