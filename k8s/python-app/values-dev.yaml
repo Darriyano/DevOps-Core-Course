@@ -1,0 +1,53 @@
+replicaCount: 1
+
+image:
+  tag: "latest"
+  pullPolicy: Never
+
+app:
+  version: lab12-dev
+  environment: dev
+  logLevel: debug
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000
+  nodePort: 30081
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+secrets:
+  data:
+    APP_USERNAME: "dev-user"
+    APP_PASSWORD: "dev-password"
+
+readinessProbe:
+  initialDelaySeconds: 3
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+livenessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+configMap:
+  file:
+    enabled: true
+  env:
+    enabled: true
+
+persistence:
+  enabled: true
+  size: 100Mi
+  storageClass: ""
+  mountPath: /data
