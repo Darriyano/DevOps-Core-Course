@@ -1,0 +1,61 @@
+replicaCount: 3
+
+image:
+  tag: "latest"
+  pullPolicy: Never
+
+app:
+  version: lab14-prod-v3-v3-v2
+  environment: prod
+  logLevel: info
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 5000
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+secrets:
+  data:
+    APP_USERNAME: "prod-user"
+    APP_PASSWORD: "prod-password"
+
+readinessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+livenessProbe:
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+configMap:
+  file:
+    enabled: true
+  env:
+    enabled: true
+
+persistence:
+  enabled: true
+  size: 100Mi
+  storageClass: ""
+  mountPath: /data
+
+rollout:
+  enabled: true
+  strategy: blueGreen
+  blueGreen:
+    autoPromotionEnabled: false
+    previewService:
+      enabled: true
+      type: ClusterIP

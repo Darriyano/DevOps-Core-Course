@@ -1,0 +1,139 @@
+replicaCount: 3
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: python-app
+  tag: "latest"
+  pullPolicy: Never
+
+app:
+  name: python-app
+  version: lab14
+  description: DevOps course info service
+  environment: dev
+  logLevel: info
+  featureFlags:
+    visitsEnabled: true
+    metricsEnabled: true
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000
+  nodePort: 30080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 5000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 5000
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
+
+podAnnotations: {}
+podLabels: {}
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+secrets:
+  create: true
+  name: ""
+  data:
+    APP_USERNAME: "change-me"
+    APP_PASSWORD: "change-me"
+
+vault:
+  enabled: false
+  role: python-app-role
+  secretPath: secret/data/myapp/config
+  secretFileName: config
+
+hooks:
+  enabled: true
+  image:
+    repository: python-app
+    tag: "latest"
+    pullPolicy: Never
+  preInstall:
+    enabled: true
+    weight: -5
+    deletePolicy: before-hook-creation,hook-succeeded
+    command:
+      - sh
+      - -c
+      - echo '[pre-install] validating Helm release values' && sleep 3 && echo '[pre-install] validation completed'
+  postInstall:
+    enabled: true
+    weight: 5
+    deletePolicy: before-hook-creation,hook-succeeded
+    command:
+      - sh
+      - -c
+      - echo '[post-install] smoke test placeholder' && sleep 3 && echo '[post-install] installation looks good'
+
+configMap:
+  file:
+    enabled: true
+    name: ""
+    source: files/config.json
+    mountDir: /config
+  env:
+    enabled: true
+    name: ""
+
+persistence:
+  enabled: true
+  size: 100Mi
+  storageClass: ""
+  existingClaim: ""
+  mountPath: /data
+
+rollout:
+  enabled: true
+  strategy: canary
+  canary:
+    steps:
+      - setWeight: 20
+      - pause: {}
+      - setWeight: 40
+      - pause:
+          duration: 30s
+      - setWeight: 60
+      - pause:
+          duration: 30s
+      - setWeight: 80
+      - pause:
+          duration: 30s
+      - setWeight: 100
+  blueGreen:
+    autoPromotionEnabled: false
+    previewService:
+      enabled: true
+      type: ClusterIP
